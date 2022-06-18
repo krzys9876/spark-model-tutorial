@@ -1,0 +1,1 @@
+-Dlog4j.configuration=file:log4j.properties -Dlogfile.name=log -Dspark.yarn.app.container.log.dir=app-logs
