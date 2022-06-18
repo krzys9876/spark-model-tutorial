@@ -1,0 +1,1 @@
+sqlite3.exe linreg.db ".read lin_reg_process_all.sql"
