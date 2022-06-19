@@ -1,11 +1,4 @@
-INSERT INTO base (sensor,period,temp,temp_extrapl) 
-select input_sensor,input_period,input_temp,next_temp_extrapl from prev_base_with_input;
-
-UPDATE base set 
-next_period=(select next_period from lin_reg l where l.sensor=sensor and l.last_period=period),
-next_temp_extrapl=(select next_temp from lin_reg l where l.sensor=sensor and l.last_period=period),
-lin_reg_a=(select lin_reg_a from lin_reg l where l.sensor=sensor and l.last_period=period),
-lin_reg_b=(select lin_reg_b from lin_reg l where l.sensor=sensor and l.last_period=period) 
-where (sensor,period) in (select sensor,last_period from lin_reg);
+INSERT INTO base (sensor,period,temp,temp_extrapl,next_period,next_temp_extrapl,lin_reg_a,lin_reg_b,period_count,sum_period_temp,sum_period,sum_temp,sum_period_sqr) 
+select sensor,period,temp,temp_extrapl,next_period,next_temp_extrapl,lin_reg_a,lin_reg_b,period_count,sum_period_temp,sum_period,sum_temp,sum_period_sqr from prev_base_with_input_updated;
 
 delete from input;
