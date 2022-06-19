@@ -67,7 +67,7 @@ class SparkTest extends AnyFunSuite with GivenWhenThen with BeforeAndAfterAll {
     assertResult(20.787)(values(0)(2))
     assert(TestUtils.equalsRounded(19.112667,values(0)(3),6))
     assertResult(5)(values(0)(4))
-    assertResult(21.626)(values(0)(5))
+    assert(TestUtils.equalsRounded(21.626,values(0)(5),4))
     assert(TestUtils.equalsRounded(1.3413,values(0)(6),4))
     assert(TestUtils.equalsRounded(14.9195,values(0)(7),4))
   }
