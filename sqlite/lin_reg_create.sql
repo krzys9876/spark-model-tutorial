@@ -1,6 +1,6 @@
 CREATE TABLE base 
 (sensor int8, period int8, temp real, temp_extrapl real, next_period int8, next_temp_extrapl real, 
-lin_reg_a real, lin_reg_b real, period_count long, sum_period_temp real, sum_period real, sum_temp real, sum_period_sqr real);
+lin_reg_a real, lin_reg_b real, period_count long, sum_period_temp real, sum_period long, sum_temp real, sum_period_sqr long);
 
 CREATE TABLE input (sensor int8, period int8, temp real);
 
