@@ -285,3 +285,24 @@ This test is straightforward as the whole functionality is **Base.apply** functi
 much more comprehensive tests and much broader code to work. Having the ability to follow TDD workflow and run tests
 instantly every small change instead of waiting long seconds or even minutes for spark-generated results 
 greatly improves developer's comfort and improves design.
+
+## Run the application ##
+
+The whole application can be executed in a very similar way to tests. The main difference is the location of base and input files
+as well as saving new base. It is a good practice to keep separate files for each period as it is safer. If you really need one file, 
+you should consider partitioning (in this case by period) and dynamic partition overwrite mode:
+
+    spark.conf.set("spark.sql.sources.partitionOverwriteMode", "dynamic")
+
+File locations can be passed via program arguments, environment variables, can be read from a database etc.
+If you just want to play with sample data, the shortest loop calculating consecutive period can be as simple as:
+
+    import FileLoader._
+    for(period <- List.range(1,12)) {
+      SparkModel
+        .processSparkScala(f"data/base_${period-1}",f"data/input_$period.csv")
+        .saveCSV(f"data/base_$period")
+    }
+
+Note that **saveCSV** function is not part of spark API, this is just a custom function wrapped in *implicit class* (see FileLoader).
+This is a great scala feature that can be used to make the code more expressive.
