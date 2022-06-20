@@ -21,13 +21,13 @@ therefore all intermediate formulas are stored together with all other data in a
 
 ### Formulas ###
 
-For any given **x** and **y**, **x~next~** and linear regression factors **a** and **b** the **y~next~** can be calculated as:
+For any given **x** and **y**, **x_next** and linear regression factors **a** and **b** the **y_next** can be calculated as:
 
 y=ax+b
 
 or rather:
 
-y~next~ = x~next~ * a + b
+y_next = x_next * a + b
 
 **x** is a period, **y** is a temperature. We know next period by adding 1 to the current number.
 The complicated part is **a** and **b**. They use 5 intermediate formulas:
@@ -213,12 +213,12 @@ Obviously this is not all, as the whole business logic is delegated out of spark
 We use spark to load files, to do joins and necessary column operations (e.g. renaming).
 but the difficult part is just pure Scala. The key here is mapping between two case classes: **BaseWithInput** and **Base**.
 Spark is able to process records in a data frame in the following way:
-1. For each "input" row (input to the "business logic" part of the application) create an instance of Scala case class. 
-The inut case class shoud have a structure (i.e. list of fields) directly corresponding to spark data frame, 
+1. For each "input" row (input to the "business logic" part of the application) spark creates an instance of Scala case class. 
+The input case class should have a structure (i.e. list of fields) directly corresponding to spark data frame, 
 including column names and data types. This will ensure smooth operation.
 2. The developer should provide a function that accepts "input" case class as parameter and returns "output" case class.
 This mapping functionality is completely separated from spark.
-3. The "output" case class is read by spark to the data frame using field names and types as columns definition.
+3. The "output" case class returned by function from pt.2. is read by spark to the data frame using field names and types as columns definition.
 
 The code above shows no.1 (function: **as[T]**) and no.3. (function **map**).
 
@@ -254,8 +254,8 @@ So let's now look at pt.2.:
         }
     }
 
-You may argue (and you'll probably be right) that this is not the cleanes code ever. The point is you are not
-bound by spark requirements and you are free to write the code according to your style. 
+You may argue (and you'll probably be right) that this is not the cleanest code ever. The point is you are not
+bound by spark requirements, and you are free to write the code according to your style. 
 You may even use other language. The only constraints are:
 1. Input and output case classes must reflect spark data frames structures
 2. Nullable fields should be optional (Option[T])
@@ -263,7 +263,7 @@ You may even use other language. The only constraints are:
 Such complex fields work excellent with json files.
 
 Apart from code itself the really important aspect of this approach is testability. You can write 
-the TDD-style tests and execute them in miliseconds - they do not need costly spark session. 
+the TDD-style tests and execute them in milliseconds - they do not need costly spark session. 
 The sample tests are in **ScalaTest** class:
 
     test("linear regression calculation test for a single period") {
