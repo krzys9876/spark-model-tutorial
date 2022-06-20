@@ -1,4 +1,4 @@
-# 3 ways to implement complex calculations using Spark #
+# Three ways to implement complex calculations with Apache Spark #
 
 Sometimes when it comes to databases and/or structured files it is necessary not only to do simple transformations  
 (e.g. change data format, decode, enrich etc.) but also to calculate complex formulas in order to 
@@ -175,18 +175,20 @@ You don't have to use SQL, spark provides a great API for data manipulation. Con
         output
     }
 
-It's shorter, all we do here is calculation of one column at a time. This is much better to me. It is clearer and compile-time verifiable.
-Of course - the compiler will not correct typos in column names, but they can easily be replaced with constants.
+It's shorter, all we do here is calculation of one column at a time. This is much better to me. It is clearer and 
+compile-time verifiable. Of course - the compiler will not correct typos in column names, but they can be replaced with constants.
 
-One could argue that chaining *withColumn* functions degrades performance. This should be checked every time we perceive speed as a decisive factor.
-Quite often this will not be a case and if only the performance is satisfactory readability should be regarded as critical.
+One could argue that chaining *withColumn* functions degrades performance. This should be checked every time we perceive 
+speed as a decisive factor. Quite often this will not be a case and if only the performance is satisfactory 
+readability should be regarded as critical.
 
 But this still isn't perfect (if anything is...)
 
 Take a look at testability. In order to calculate anything through Spark you must instantiate a SparkSession object, 
-run the process and eventually close the session. This all takes precious time. One spark-based test can take many seconds, sometimes even a few minutes.
+run the process and eventually close the session. This all takes precious time. One spark-based test can take many seconds, 
+sometimes even a few minutes.
 
-This practically cancels falst TDD flow of Red/Green/Refactor, where we aim at miliseconds or seconds at mosts.
+This practically cancels fast TDD flow of Red/Green/Refactor, where we assume testing at milliseconds or seconds at most.
 
 Is there something we can do about it?
 
@@ -304,5 +306,5 @@ If you just want to play with sample data, the shortest loop calculating consecu
         .saveCSV(f"data/base_$period")
     }
 
-Note that **saveCSV** function is not part of spark API, this is just a custom function wrapped in *implicit class* (see FileLoader).
-This is a great scala feature that can be used to make the code more expressive.
+Note that **saveCSV** function is not part of spark API, this is just a custom function wrapped in an *implicit class* 
+(see FileLoader). This is a great scala feature that can be used to make the code more expressive.
