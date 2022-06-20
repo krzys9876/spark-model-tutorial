@@ -89,6 +89,7 @@ object SparkModel {
           (col("sum_temp") * col("sum_period_sqr") - col("sum_period") * col("sum_period_temp"))/
             (col("period_count") * col("sum_period_sqr") - col("sum_period") * col("sum_period")))
         .withColumn("next_temp_extrapl",col("lin_reg_a") * col("next_period") + col("lin_reg_b"))
+        .drop("input_period","input_temp")
 
     output.show()
     output

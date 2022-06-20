@@ -1,11 +1,16 @@
 package org.kr.spark.tutorial.test
 
+import org.apache.spark.sql.{DataFrame, Row}
 import org.kr.spark.tutorial.Base
 
 object TestUtils {
   def roundAny(value:Any,decimals:Int):Double = {
+    val valueAsDouble=value match {
+      case v:Double=>v
+      case v:Long=>v.toDouble
+    }
     val factor:Double=math.pow(10,decimals)
-    math.rint(value.asInstanceOf[Double]*factor)/factor
+    math.rint(valueAsDouble*factor)/factor
   }
 
   def equalsRounded(expected:Double,actual:Any,decimals:Int):Boolean = {
@@ -27,4 +32,15 @@ object TestUtils {
       equalsRounded(expected.sum_temp,actual.sum_temp,decimals) &&
       expected.sum_period_sqr==actual.sum_period_sqr
 
+  def equalsRounded(expected:Array[Double],actual:Row,decimals:Int):Boolean = {
+    val expectedRounded=expected.map(roundAny(_,decimals))
+    val actualRounded=actual.toSeq.map(roundAny(_,decimals))
+    expectedRounded.sameElements(actualRounded)
+  }
+
+  def getOutputRow(df:DataFrame,sensor:Long,period:Long):Row={
+    df
+      .filter(f"sensor = $sensor and period = $period")
+      .collect()(0)
+  }
 }
