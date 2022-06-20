@@ -25,37 +25,3 @@ object Schemas {
     StructField("sum_period_sqr", LongType)
   ))
 }
-
-case class Base(
-                 sensor: Long,
-                 period: Option[Long],
-                 temp: Option[Double],
-                 temp_extrapl: Option[Double],
-                 next_period: Option[Long],
-                 next_temp_extrapl: Option[Double],
-                 lin_reg_a: Option[Double],
-                 lin_reg_b: Option[Double],
-                 period_count: Option[Long],
-                 sum_period_temp: Option[Double],
-                 sum_period: Option[Long],
-                 sum_temp: Option[Double],
-                 sum_period_sqr: Option[Long],
-               )
-
-case class BaseWithInput(
-                          sensor: Long,
-                          period: Option[Long],
-                          temp: Option[Double],
-                          temp_extrapl: Option[Double],
-                          next_period: Option[Long],
-                          next_temp_extrapl: Option[Double],
-                          lin_reg_a: Option[Double],
-                          lin_reg_b: Option[Double],
-                          period_count: Option[Long],
-                          sum_period_temp: Option[Double],
-                          sum_period: Option[Long],
-                          sum_temp: Option[Double],
-                          sum_period_sqr: Option[Long],
-                          input_period: Long,
-                          input_temp: Double
-                        )

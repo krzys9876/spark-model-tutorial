@@ -3,6 +3,7 @@ package org.kr.spark.tutorial
 import org.apache.spark.sql.functions.{coalesce, col, lit, max}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+
 object SparkModel {
   private def getJoinedInputWithBase(baseFile:String,inputFile:String)(implicit spark:SparkSession):DataFrame = {
     val base=FileLoader.loadCSV(baseFile,Schemas.base)
@@ -91,29 +92,94 @@ object SparkModel {
 
     output.show()
     output
+  }
 
-/*    val linReg=
-      joined
-        .select("input_period","input_temp").collect().toList
-        .map(row=>(row(0).asInstanceOf[Long].toDouble,row(1).asInstanceOf[Double])) ++
-        base
-          .select("period","temp").collect().toList
-          .map(row=>(row(0).asInstanceOf[Long].toDouble,row(1).asInstanceOf[Double]))
+  def processSparkScala(baseFile:String, inputFile:String)(implicit spark:SparkSession):DataFrame= {
+    val joined=getJoinedInputWithBase(baseFile,inputFile)
 
-    val count=linReg.length
-    val sumPeriodTemp=linReg.foldLeft(0.0)((s,e)=>s + e._1*e._2)
-    val sumPeriod=linReg.foldLeft(0.0)((s,e)=>s + e._1)
-    val sumTemp=linReg.foldLeft(0.0)((s,e)=>s + e._2)
-    val sumPeriodSqr=linReg.foldLeft(0.0)((s,e)=>s + e._1*e._1)
-
-    val linRegA=(count * sumPeriodTemp-sumPeriod * sumTemp)/(count * sumPeriodSqr-sumPeriod * sumPeriod)
-    val linRegB=(sumTemp * sumPeriodSqr-sumPeriod * sumPeriodTemp)/(count * sumPeriodSqr-sumPeriod * sumPeriod)
-
-    println(f"A=$linRegA B=$linRegB nX=${5*linRegA+linRegB}")
-
-    val rows=Seq((1,4,20.787,19.1126666666667,5,21.626,1.34129999999999,14.9195,4,189.434,10.0,73.091,30.0))
     import spark.implicits._
-    val columnNames=Schemas.base.map(_.name)
-    spark.sparkContext.parallelize(rows).toDF(columnNames : _*)*/
+    val output=
+      joined
+        .as[BaseWithInput]
+        .map(Base(_))
+        .toDF()
+
+    output.show()
+    output
   }
 }
+
+case class Base(
+                 sensor: Long,
+                 period: Long,
+                 temp: Double,
+                 temp_extrapl: Option[Double],
+                 next_period: Long,
+                 next_temp_extrapl: Option[Double],
+                 lin_reg_a: Option[Double],
+                 lin_reg_b: Option[Double],
+                 period_count: Long,
+                 sum_period_temp: Double,
+                 sum_period: Long,
+                 sum_temp: Double,
+                 sum_period_sqr: Long
+               )
+
+object Base {
+  def apply(joined:BaseWithInput):Base = {
+    val nextPeriod=joined.input_period+1
+    val periodCount=joined.period_count.getOrElse(0L) + 1
+    val sumPeriodTemp=joined.sum_period_temp.getOrElse(0.0)+joined.input_period*joined.input_temp
+    val sumPeriod=joined.sum_period.getOrElse(0L)+joined.input_period
+    val sumTemp=joined.sum_temp.getOrElse(0.0)+joined.input_temp
+    val sumPeriodSqr=joined.sum_period_sqr.getOrElse(0L) + joined.input_period * joined.input_period
+
+    val denominator=periodCount * sumPeriodSqr - sumPeriod * sumPeriod
+
+    val linRegA=
+      if(denominator!=0.0)
+        Some(
+          (periodCount * sumPeriodTemp - sumPeriod * sumTemp)/
+            (periodCount * sumPeriodSqr - sumPeriod * sumPeriod))
+      else
+        None
+
+    val linRegB=
+      if(denominator!=0.0)
+        Some(
+          (sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/
+            (periodCount * sumPeriodSqr - sumPeriod * sumPeriod))
+      else
+        None
+
+    val nextTempExtrapl=
+      if(linRegA.isDefined && linRegB.isDefined)
+        Some(linRegA.get * nextPeriod + linRegB.get)
+      else
+        None
+
+    new Base(joined.sensor,joined.input_period,joined.input_temp,joined.next_temp_extrapl,
+      nextPeriod,nextTempExtrapl,linRegA,linRegB,
+      periodCount,sumPeriodTemp,sumPeriod,sumTemp,sumPeriodSqr
+    )
+  }
+}
+
+case class BaseWithInput(
+                          sensor: Long,
+                          period: Option[Long],
+                          temp: Option[Double],
+                          temp_extrapl: Option[Double],
+                          next_period: Option[Long],
+                          next_temp_extrapl: Option[Double],
+                          lin_reg_a: Option[Double],
+                          lin_reg_b: Option[Double],
+                          period_count: Option[Long],
+                          sum_period_temp: Option[Double],
+                          sum_period: Option[Long],
+                          sum_temp: Option[Double],
+                          sum_period_sqr: Option[Long],
+                          input_period: Long,
+                          input_temp: Double
+                        )
+
