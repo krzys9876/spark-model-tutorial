@@ -33,9 +33,13 @@ y_next = x_next * a + b
 The complicated part is **a** and **b**. They use 5 intermediate formulas:
 
 **period_count** - equivalent of SQL count(period) assuming that all values are distinct for a sensor
+
 **sum_period_temp** - a sum of multiplies of period and temperature, i.e. sum(period * temperature)
+
 **sum_period** - a sum of all period numbers, i.e. sum(period)
+
 **sum_temp** - a sum of all temperatures, i.e. sum(temp)
+
 **sum_period_sqr** - a sum of squares of period, i.e sum(period*period)
 
 Note that all of them are additive, so we can calculate them incrementally. 
