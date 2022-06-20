@@ -238,26 +238,22 @@ So let's now look at pt.2.:
         val sumPeriod=joined.sum_period.getOrElse(0L)+joined.input_period
         val sumTemp=joined.sum_temp.getOrElse(0.0)+joined.input_temp
         val sumPeriodSqr=joined.sum_period_sqr.getOrElse(0L) + joined.input_period * joined.input_period
-            
+    
         val denominator=periodCount * sumPeriodSqr - sumPeriod * sumPeriod
-            
-        val linRegA=
-          if(denominator!=0.0) Some((periodCount * sumPeriodTemp - sumPeriod * sumTemp)/denominator)
-          else None
-            
-        val linRegB=
-          if(denominator!=0.0) Some((sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/denominator)
-          else None
-            
-        val nextTempExtrapl=
-          if(linRegA.isDefined && linRegB.isDefined) Some(linRegA.get * nextPeriod + linRegB.get)
-          else None
-            
+    
+        val (linRegA,linRegB,nextTempExtrapl) = denominator match {
+          case 0.0 => (None, None, None)
+          case denominator =>
+            val a=(periodCount * sumPeriodTemp - sumPeriod * sumTemp)/denominator
+            val b=(sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/denominator
+            (Some(a),Some(b),Some(nextPeriod*a+b))
+          }
+    
         new Base(joined.sensor,joined.input_period,joined.input_temp,joined.next_temp_extrapl,
                  nextPeriod,nextTempExtrapl,linRegA,linRegB,
                  periodCount,sumPeriodTemp,sumPeriod,sumTemp,sumPeriodSqr
-                )
-        }
+        )
+      }
     }
 
 You may argue (and you'll probably be right) that this is not the cleanest code ever. The point is you are not

@@ -137,17 +137,13 @@ object Base {
 
     val denominator=periodCount * sumPeriodSqr - sumPeriod * sumPeriod
 
-    val linRegA=
-      if(denominator!=0.0) Some((periodCount * sumPeriodTemp - sumPeriod * sumTemp)/denominator)
-      else None
-
-    val linRegB=
-      if(denominator!=0.0) Some((sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/denominator)
-      else None
-
-    val nextTempExtrapl=
-      if(linRegA.isDefined && linRegB.isDefined) Some(linRegA.get * nextPeriod + linRegB.get)
-      else None
+    val (linRegA,linRegB,nextTempExtrapl) = denominator match {
+      case 0.0 => (None, None, None)
+      case denominator =>
+        val a=(periodCount * sumPeriodTemp - sumPeriod * sumTemp)/denominator
+        val b=(sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/denominator
+        (Some(a),Some(b),Some(nextPeriod*a+b))
+    }
 
     new Base(joined.sensor,joined.input_period,joined.input_temp,joined.next_temp_extrapl,
       nextPeriod,nextTempExtrapl,linRegA,linRegB,
