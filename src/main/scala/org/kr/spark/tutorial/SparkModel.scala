@@ -4,14 +4,71 @@ import org.apache.spark.sql.functions.{coalesce, col, lit, max}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 object SparkModel {
-  def process(baseFile:String,inputFile:String)(implicit spark:SparkSession):DataFrame= {
-
+  private def getJoinedInputWithBase(baseFile:String,inputFile:String)(implicit spark:SparkSession):DataFrame = {
     val base=FileLoader.loadCSV(baseFile,Schemas.base)
     val input=FileLoader.loadCSV(inputFile,Schemas.input)
     val inputPeriod=input.agg(max("input_period")).first().getAs[Long](0)
     val prevBase=base.filter(col("period").equalTo(inputPeriod-1))
     val joined=prevBase.join(input,List("sensor"),"full")
     joined.show()
+    joined
+  }
+
+  def processSparkSQL(baseFile:String, inputFile:String)(implicit spark:SparkSession):DataFrame= {
+    val joined=getJoinedInputWithBase(baseFile,inputFile)
+
+    joined.createOrReplaceTempView("joined")
+
+    val preOutput=spark.sql(
+      """
+        |select
+        | sensor,
+        | input_period as period,
+        | input_temp as temp,
+        | next_temp_extrapl as temp_extrapl,
+        | input_period+1 as next_period,
+        | period_count+1 as period_count,
+        | sum_period_temp+input_period*input_temp as sum_period_temp,
+        | sum_period+input_period as sum_period,
+        | sum_temp+input_temp as sum_temp,
+        | sum_period_sqr+input_period*input_period as sum_period_sqr
+        | from joined
+        | """.stripMargin)
+
+    preOutput.createOrReplaceTempView("pre_output")
+
+    val preOutput2=spark.sql(
+      """
+        |select
+        | sensor,period,temp,temp_extrapl,next_period,period_count,sum_period_temp,sum_period,sum_temp,sum_period_sqr,
+        | (period_count * sum_period_temp - sum_period * sum_temp)/
+        | (period_count * sum_period_sqr - sum_period * sum_period) as lin_reg_a,
+        | (sum_temp * sum_period_sqr - sum_period * sum_period_temp)/
+        | (period_count * sum_period_sqr - sum_period * sum_period) as lin_reg_b
+        | from pre_output
+      """.stripMargin
+    )
+
+    preOutput2.createOrReplaceTempView("pre_output2")
+
+    val output=spark.sql(
+      """
+        |select
+        | sensor,period,temp,temp_extrapl,next_period,
+        | next_period * lin_reg_a + lin_reg_b as next_temp_extrapl,
+        | lin_reg_a,lin_reg_b,
+        | period_count,sum_period_temp,sum_period,sum_temp,sum_period_sqr
+        | from pre_output2
+      """.stripMargin
+    )
+
+    output.show()
+    output
+
+  }
+
+  def processSparkFunctions(baseFile:String, inputFile:String)(implicit spark:SparkSession):DataFrame= {
+    val joined=getJoinedInputWithBase(baseFile,inputFile)
 
     val output=
       joined
