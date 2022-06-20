@@ -8,7 +8,7 @@ The linear regression formula is complicated enough so that it is necessary to w
 a nested query. This is to demonstrate that SQL is not really capable of handling such formulas - 
 the overhead related to subsequent queries (nested or chained as view) makes formulas difficult to read.
 
-##Database structure##
+### Database structure ###
 
 The application consists of two tables:
 1. **base** which contains full period data for a sensor in a given period, together with intermediate factors required to calculate linear regression
@@ -21,6 +21,8 @@ The data flow is made of the following stages:
 3. join previous period base with current input: **prev_base_with_input** view
 4. calculate current period values: **prev_base_with_input_updated** view
 5. insert results into base and clear the input table: **lin_reg_process_input.sql** script
+
+### Running the application ###
 
 The script to blank create database is **lin_reg_create.sql**. You may want to process all periods at once using **lin_reg_process_all.sql**
 
