@@ -1,4 +1,4 @@
-# 3 ways to implement calculation using Spark #
+# 3 ways to implement complex calculations using Spark #
 
 Sometimes when it comes to databases and/or structured files it is necessary not only to do simple transformations  
 (e.g. change data format, decode, enrich etc.) but also to calculate complex formulas in order to 
