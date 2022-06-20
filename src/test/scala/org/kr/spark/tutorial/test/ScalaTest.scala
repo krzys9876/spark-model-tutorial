@@ -5,7 +5,7 @@ import org.scalatest.GivenWhenThen
 import org.scalatest.funsuite.AnyFunSuite
 
 class ScalaTest extends AnyFunSuite with GivenWhenThen {
-  test("linear reggression calculation test for a single period") {
+  test("linear regression calculation test for a single period") {
     Given("base from previous period with input data")
     val joinedBaseWithInput=
       BaseWithInput(1,Some(3L),Some(17.81),Some(20.592),Some(4L),Some(19.1126666666667),Some(0.838999999999989),
@@ -18,7 +18,7 @@ class ScalaTest extends AnyFunSuite with GivenWhenThen {
     assert(TestUtils.baseEquals(reference,newBase,6))
   }
 
-  test("linear reggression calculation test for the first period") {
+  test("linear regression calculation test for the first period") {
     Given("base from previous period with input data")
     val joinedBaseWithInput=
       BaseWithInput(1,None,None,None,None,None,None,None,None,None,None,None,None,1,16.132)
@@ -30,7 +30,7 @@ class ScalaTest extends AnyFunSuite with GivenWhenThen {
     assert(TestUtils.baseEquals(reference,newBase,6))
   }
 
-  test("linear reggression calculation test for the second period") {
+  test("linear regression calculation test for the second period") {
     Given("base from previous period with input data")
     val joinedBaseWithInput=
       BaseWithInput(1,Some(1),Some(16.132),None,Some(2),None,None,None,Some(1),Some(16.132),
