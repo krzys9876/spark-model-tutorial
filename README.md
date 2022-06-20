@@ -47,6 +47,8 @@ Given these formulas we get:
     b = (sum_temp * sum_period_sqr - sum_period * sum_period_temp) / 
         (period_count * sum_period_sqr - sum_period * sum_period)
 
+*source*: https://zcht.home.amu.edu.pl/pliki/Regresja%20liniowa.pdf
+
 ### SQLite prototype ###
 
 I started with a prototype written in pure SQL using SQLite. It is described in separate directory, 
@@ -188,4 +190,98 @@ This practically cancels falst TDD flow of Red/Green/Refactor, where we aim at m
 
 Is there something we can do about it?
 
-## Spark take 3 - integration with native Scala ##
+## Spark take 3 - integration with Scala ##
+
+How about this:
+
+      def processSparkScala(baseFile:String, inputFile:String)(implicit spark:SparkSession):DataFrame= {
+        val joined=getJoinedInputWithBase(baseFile,inputFile)
+    
+        import spark.implicits._
+        val output=
+          joined
+            .as[BaseWithInput]
+            .map(Base(_))
+            .toDF()
+    
+        output.show()
+        output
+    }
+
+Obviously this is not all, as the whole business logic is delegated out of spark-aware code. 
+
+We use spark to load files, to do joins and necessary column operations (e.g. renaming).
+but the difficult part is just pure Scala. The key here is mapping between two case classes: **BaseWithInput** and **Base**.
+Spark is able to process records in a data frame in the following way:
+1. For each "input" row (input to the "business logic" part of the application) create an instance of Scala case class. 
+The inut case class shoud have a structure (i.e. list of fields) directly corresponding to spark data frame, 
+including column names and data types. This will ensure smooth operation.
+2. The developer should provide a function that accepts "input" case class as parameter and returns "output" case class.
+This mapping functionality is completely separated from spark.
+3. The "output" case class is read by spark to the data frame using field names and types as columns definition.
+
+The code above shows no.1 (function: **as[T]**) and no.3. (function **map**).
+
+So let's now look at pt.2.:
+
+    object Base {
+      def apply(joined:BaseWithInput):Base = {
+        val nextPeriod=joined.input_period+1
+        val periodCount=joined.period_count.getOrElse(0L) + 1
+        val sumPeriodTemp=joined.sum_period_temp.getOrElse(0.0)+joined.input_period*joined.input_temp
+        val sumPeriod=joined.sum_period.getOrElse(0L)+joined.input_period
+        val sumTemp=joined.sum_temp.getOrElse(0.0)+joined.input_temp
+        val sumPeriodSqr=joined.sum_period_sqr.getOrElse(0L) + joined.input_period * joined.input_period
+            
+        val denominator=periodCount * sumPeriodSqr - sumPeriod * sumPeriod
+            
+        val linRegA=
+          if(denominator!=0.0) Some((periodCount * sumPeriodTemp - sumPeriod * sumTemp)/denominator)
+          else None
+            
+        val linRegB=
+          if(denominator!=0.0) Some((sumTemp * sumPeriodSqr - sumPeriod * sumPeriodTemp)/denominator)
+          else None
+            
+        val nextTempExtrapl=
+          if(linRegA.isDefined && linRegB.isDefined) Some(linRegA.get * nextPeriod + linRegB.get)
+          else None
+            
+        new Base(joined.sensor,joined.input_period,joined.input_temp,joined.next_temp_extrapl,
+                 nextPeriod,nextTempExtrapl,linRegA,linRegB,
+                 periodCount,sumPeriodTemp,sumPeriod,sumTemp,sumPeriodSqr
+                )
+        }
+    }
+
+You may argue (and you'll probably be right) that this is not the cleanes code ever. The point is you are not
+bound by spark requirements and you are free to write the code according to your style. 
+You may even use other language. The only constraints are:
+1. Input and output case classes must reflect spark data frames structures
+2. Nullable fields should be optional (Option[T])
+3. Data types should be either simple (numbers, text, date etc., but not other objects) or Arrays. 
+Such complex fields work excellent with json files.
+
+Apart from code itself the really important aspect of this approach is testability. You can write 
+the TDD-style tests and execute them in miliseconds - they do not need costly spark session. 
+The sample tests are in **ScalaTest** class:
+
+    test("linear regression calculation test for a single period") {
+        Given("base from previous period with input data")
+        val joinedBaseWithInput=
+        BaseWithInput(1,Some(3L),Some(17.81),Some(20.592),Some(4L),Some(19.1126666666667),Some(0.838999999999989),
+        Some(15.7566666666667),Some(3L),Some(106.286),Some(6L),Some(52.304),Some(14L),4,20.787)
+        
+        When("current base is calculated")
+        val newBase=Base(joinedBaseWithInput)
+        
+        Then("values are equal to reference data")
+        val reference=new Base(1,4,20.787,Some(19.112667),5,Some(21.626),
+        Some(1.3413),Some(14.9195),4,189.434,10,73.091,30)
+        assert(TestUtils.baseEquals(reference,newBase,6))
+    }
+
+This test is straightforward as the whole functionality is **Base.apply** function. You may, however, need
+much more comprehensive tests and much broader code to work. Having the ability to follow TDD workflow and run tests
+instantly every small change instead of waiting long seconds or even minutes for spark-generated results 
+greatly improves developer's comfort and improves design.
