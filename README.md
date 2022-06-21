@@ -47,7 +47,7 @@ $\displaystyle\sum_{i=1}^{n} y_i$ = **sum_temp** - a sum of all temperatures, i.
 
 $\displaystyle\sum_{i=1}^{n} x_i^2$ = **sum_period_sqr** - a sum of squares of period, i.e $sum(period^2)$
 
-Note that all of them are additive, so we can calculate them incrementally. They could be reduced to 3 additive formulas (2 numerators and 1 common denominator, but I leave them as they refer directly to the source formula).
+Note that all of them are additive, so we can calculate them incrementally. They could be reduced to 3 additive formulas (2 numerators and 1 common denominator), but I leave them as they refer directly to the source formula. Also I need some complexity to demonstrate different approaches to solving the problem.
 
 Given all the above we get:
 
