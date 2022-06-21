@@ -21,16 +21,11 @@ therefore all intermediate formulas are stored together with all other data in a
 
 ### Formulas ###
 
-For any given $x$ and $y$, $x_{next}$ and linear regression factors $a$ and $b$ the $y_{next}$ can be calculated as:
+For any given $x$ and linear regression factors $a$ and $b$ the $y$ can be calculated as:
 
 $y=ax + b$
 
-or rather:
-
-$y_{next} = x_{next} * a + b$
-
-$x$ is a period, $y$ is a temperature. We know next period by adding 1 to the current number.
-The complicated part is $a$ and $b$:
+$x$ is a period, $y$ is a temperature. We know next period by adding 1 to the current number. The complicated part is $a$ and $b$:
 
 $$ a = { n\displaystyle\sum_{i=1}^{n} x_iy_i - \displaystyle\sum_{i=1}^{n} x_i \displaystyle\sum_{i=1}^{n} y_i  \over n\displaystyle\sum_{i=1}^{n} x_i^2 - (\displaystyle\sum_{i=1}^{n} x_i)^2 } $$ 
 
@@ -50,7 +45,7 @@ $\displaystyle\sum_{i=1}^{n} x_i$ = **sum_period** - a sum of all period numbers
 
 $\displaystyle\sum_{i=1}^{n} y_i$ = **sum_temp** - a sum of all temperatures, i.e. $sum(temp)$
 
-$\displaystyle\sum_{i=1}^{n} x_i^2$ **sum_period_sqr** - a sum of squares of period, i.e $sum(period^2)$
+$\displaystyle\sum_{i=1}^{n} x_i^2$ = **sum_period_sqr** - a sum of squares of period, i.e $sum(period^2)$
 
 Note that all of them are additive, so we can calculate them incrementally. They could be reduced to 3 additive formulas (2 numerators and 1 common denominator, but I leave them as they refer directly to the source formula).
 
