@@ -21,29 +21,40 @@ therefore all intermediate formulas are stored together with all other data in a
 
 ### Formulas ###
 
-For any given **x** and **y**, **x_next** and linear regression factors **a** and **b** the **y_next** can be calculated as:
+For any given $x$ and $y$, $x_{next}$ and linear regression factors $a$ and $b$ the $y_{next}$ can be calculated as:
 
-y=ax+b
+$y=ax + b$
 
 or rather:
 
-y_next = x_next * a + b
+$y_{next} = x_{next} * a + b$
 
-**x** is a period, **y** is a temperature. We know next period by adding 1 to the current number.
-The complicated part is **a** and **b**. They use 5 intermediate formulas:
+$x$ is a period, $y$ is a temperature. We know next period by adding 1 to the current number.
+The complicated part is $a$ and $b$:
 
-**period_count** - equivalent of SQL count(period) assuming that all values are distinct for a sensor
+$$ a = { n\sum xy - \sum x \sum y  \over n\sum x^2 - (\sum x)^2 } $$ 
 
-**sum_period_temp** - a sum of multiplies of period and temperature, i.e. sum(period * temperature)
+and 
 
-**sum_period** - a sum of all period numbers, i.e. sum(period)
+$$ b = { \sum y \sum x^2 - \sum x \sum xy  \over n\sum x^2 - (\sum x)^2 } $$
 
-**sum_temp** - a sum of all temperatures, i.e. sum(temp)
+*source*: https://zcht.home.amu.edu.pl/pliki/Regresja%20liniowa.pdf
 
-**sum_period_sqr** - a sum of squares of period, i.e sum(period*period)
+They use 5 intermediate formulas:
 
-Note that all of them are additive, so we can calculate them incrementally. 
-Given these formulas we get:
+**period_count** - equivalent of SQL $count(period)$ assuming that all values are distinct for a sensor
+
+**sum_period_temp** - a sum of multiplies of period and temperature, i.e. $sum(period * temperature)$
+
+**sum_period** - a sum of all period numbers, i.e. $sum(period)$
+
+**sum_temp** - a sum of all temperatures, i.e. $sum(temp)$
+
+**sum_period_sqr** - a sum of squares of period, i.e $sum(period^2)$
+
+Note that all of them are additive, so we can calculate them incrementally. They could be reduced to 3 additive formulas (2 numerators and 1 common denominator, but I leave them as they refer directly to the source formula).
+
+Given all the above we get:
 
     a = (period_count * sum_period_temp - sum_period * sum_temp) / 
         (period_count * sum_period_sqr - sum_period * sum_period)
@@ -51,7 +62,6 @@ Given these formulas we get:
     b = (sum_temp * sum_period_sqr - sum_period * sum_period_temp) / 
         (period_count * sum_period_sqr - sum_period * sum_period)
 
-*source*: https://zcht.home.amu.edu.pl/pliki/Regresja%20liniowa.pdf
 
 ### SQLite prototype ###
 
