@@ -287,6 +287,7 @@ The sample tests are in **ScalaTest** class:
         Then("values are equal to reference data")
         val reference=new Base(1,4,20.787,Some(19.112667),5,Some(21.626),
         Some(1.3413),Some(14.9195),4,189.434,10,73.091,30)
+        // compare two Base objects with aproppriate roundings
         assert(TestUtils.baseEquals(reference,newBase,6))
     }
 
